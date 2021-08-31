@@ -21,6 +21,16 @@ us-counties - Cases, Deaths and Hospitalizations
 
 2. Predicting Mask Use by Median Income, Urbanization, Vaccination Rate
 
+TASKS TO DO
+
+0. Merge Data
+
+1. Decide on final goal
+
+2. Decide on data to use
+
+3. Discuss possible models
+
 
 ```{r}
 
