@@ -5,6 +5,23 @@ date: "8/31/2021"
 output: html_document
 ---
 
+# Analysis Plan
+
+## Data
+
+Income_Unemployment - Median County Income and Unemployment rates
+Urbanization_Index - County level urbanization measure
+Vaccinations - County level vaccination data
+us-counties - Cases, Deaths and Hospitalizations
+
+## Analysis Ideas
+
+
+1. Predicting Covid Cases by Median-Income, Vaccination Rate, Urbanization
+
+2. Predicting Mask Use by Median Income, Urbanization, Vaccination Rate
+
+
 ```{r}
 
 
