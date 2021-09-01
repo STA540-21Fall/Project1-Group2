@@ -5,6 +5,13 @@ date: "8/31/2021"
 output: html_document
 ---
 
+```{r}
+library(tidyverse)
+library(readxl)
+library(dplyr)
+```
+
+
 # Analysis Plan
 
 ## Data
@@ -31,8 +38,60 @@ TASKS TO DO
 
 3. Discuss possible models
 
+##  Merge data
 
-```{r}
+NA values for FIPS code in cases_death
 
-
+```{r read_data}
+cases_deaths = read.csv("data/us-counties.csv")[,1:6]
+vaccination = read.csv("data/Vaccinations.csv")[,c(1,2,6,7)]
+income_unemp = read_excel("data/Income_Unemployment.xlsx", skip = 4)[,c(1,87:90)]
+unemp2021 = read.table("data/labor_force_latest.txt", 
+                       skip = 6, sep = "|", fill = TRUE,
+                       col.names = c("area code", "FIPS1", "FIPS2", "area title",
+                                     "period", "civilian labor force", "employed",
+                                     "unemployed level", "umemployed rate"))[,c(2,3,5,6,7,8,9)]
+mask = read.csv("data/mask-use-by-county.csv")
+urban = read_excel("data/Urbanization_Index.xlsx")[,c(1,7)]
+voting = read.csv("data/voting_data.csv")[,c(2,4,5,8,9)]
 ```
+
+```{r fips cleaning}
+#get same format and name for FIPS code, date and year
+cases_deaths$fips = formatC(cases_deaths$fips, width = 5, format = "d", flag = "0")
+cases_deaths$date = as.Date(cases_deaths$date)
+cases_deaths$year = format(cases_deaths$date, format = "%Y")
+names(income_unemp) = c("fips", "civilian.labor.force",
+                        "employed","unemployed.level", "umemployed.rate", "year")
+income_unemp$year = rep("2020", nrow(income_unemp))
+mask$COUNTYFP = formatC(mask$COUNTYFP, width = 5, format = "d", flag = "0")
+names(mask)[1] = "fips"
+unemp2021 = unemp2021[unemp2021$period == "   May-21  ",]
+unemp2021$FIPS1 = formatC(unemp2021$FIPS1, width = 2, format = "d", flag = "0")
+unemp2021$FIPS2 = formatC(unemp2021$FIPS2, width = 3, format = "d", flag = "0")
+unemp2021$fips =paste(unemp2021$FIPS1, unemp2021$FIPS2, sep = "")
+unemp2021 = unemp2021[,c(8,4,5,6,7)]
+unemp2021$year = rep("2021", nrow(unemp2021))
+urban$`FIPS code` = formatC(urban$`FIPS code`, width = 5, format = "d", flag = "0")
+names(urban)[1] = "fips"
+vaccination$FIPS = formatC(vaccination$FIPS, width = 5, format = "d", flag = "0")
+names(vaccination)[1:2] = c("date","fips")
+vaccination$date = as.Date(vaccination$date,format = "%m/%d/%y")
+voting$county_fips = formatC(voting$county_fips, width = 5, format = "d", flag = "0")
+names(voting)[1] = "fips"
+```
+
+```{r merge data}
+
+employment = rbind(income_unemp, unemp2021)
+  
+final = cases_deaths %>% 
+  left_join(vaccination, by = c("date","fips")) %>% 
+  left_join(mask, by = c( "fips")) %>% 
+  left_join(urban, by = "fips") %>% 
+  left_join(voting, by = "fips") %>% 
+  left_join(employment, by = c("year", "fips"))
+
+write.csv(final, "data/final.csv")
+```
+
