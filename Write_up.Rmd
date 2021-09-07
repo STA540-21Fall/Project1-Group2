@@ -143,14 +143,6 @@ voting = rbind(voting, voting_nyc)
 
 employment = rbind(unemp2020, unemp2021)
 info = unique(cases_deaths[,c(2,3,4)])
-  
-final = cases_deaths %>% 
-  left_join(region, by = "state") %>% 
-  left_join(geographic, by = "fips") %>% 
-  left_join(voting, by = "fips") %>% 
-  left_join(income, by = "fips") %>% 
-  left_join(employment, by = c("year", "fips")) %>% 
-  select(-year)
 
 final_cases = cases_deaths %>% 
   mutate(peaks = case_when (date >= "2020-07-20" & date <= "2020-07-26" ~ "peak 1",
@@ -173,5 +165,5 @@ final = final_cases %>%
   left_join(employment, by = c("year", "fips")) %>% 
   select(-year)
 
-write.csv(final, "data/final.csv")
+#write.csv(final, "data/final.csv")
 ```
