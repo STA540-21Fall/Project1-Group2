@@ -94,4 +94,3 @@ final = cases_deaths %>%
 
 write.csv(final, "data/final.csv")
 ```
-
