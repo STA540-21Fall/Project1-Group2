@@ -13,6 +13,7 @@ library(ggplot2)
 library(dplyr)
 library(scales)
 library(ggiraphExtra) 
+library(shinydashboard)
 
 
 ### DATA WRANGLING STEER CLEAR ###
@@ -34,15 +35,28 @@ library(ggiraphExtra)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-    theme = shinytheme(theme = "darkly"),
+    theme = shinytheme(theme = "yeti"),
     
     # Application title
-    titlePanel("Covid ____ Visualizations"),
-    navbarPage("Data of Interest",
+  #  titlePanel("Covid Visualizations"),
+    navbarPage("Socio-Economic Status vs. Covid Cases",
                
-               tabPanel("Masking by Region",
+               tabPanel("Introduction",
+                        navlistPanel(
+                            "Instructions",
+                            tabPanel("County View"),
+                            tabPanel("Map View"),
+                            "Data Insights",
+                            tabPanel("Interesting County Views"),
+                            tabPanel("Interesting Map Views"),
+                            "-----",
+                            tabPanel("Data Sources")
+                        )
+               ),#end tabpanel 2
+               
+               tabPanel("County View",
                         
-                        plotOutput('Covid_Masking'),
+                        plotOutput('Covid_Econ'),
                         
                         hr(),
                         
@@ -50,20 +64,20 @@ ui <- fluidPage(
                             column(4, div(align = "left",h3("Time Period"),
                                       
                                        checkboxGroupInput(inputId ="peaks",
-                                                          label = NULL,
-                                                          choices = c("Peak 1 (Date-Date)" = "pk1",
-                                                                      "Peak2 (Date-Date)" = "pk2"
+                                                          label = "",
+                                                          choices = c("Peak 1 (7/20/20)" = "pk1",
+                                                                      "Peak 2 (1/8/21)" = "pk2",
+                                                                      "Peak 3 (8/30/21)" = "pk3"
                                                           ),
                                                           selected = "pk1"))
                                       
-                                   
-                                   #Needs implementation for NCAA picture and player attributes, height weight                                  
+                                                                 
                             ),#End Left Column Time Period
                            
                             column(4,
-                                   div(align = "cetner",h3("Regions"),
+                                   div(align = "left",h3("Regions"),
                                        checkboxGroupInput(inputId ="regions",
-                                                          label = NULL,
+                                                          label = "",
                                                           choices = c("Northeast" = "NE",
                                                                       "South" = "STH",
                                                                       "Midwest" = "MW",
@@ -72,11 +86,11 @@ ui <- fluidPage(
                                                           selected = c("NE","STH","MW","WE")
                                                           )
                                    )# end div
-                            ),#end middle display
+                            ),#end middle Region
                             
                             column(4, div(align = "left",h3("Urban Index"),
                                           checkboxGroupInput(inputId ="urban",
-                                                             label = NULL,
+                                                             label = "",
                                                              choices = c("1 - Urban" = "1",
                                                                          "2" = "2",
                                                                          "3" = "3",
@@ -85,16 +99,56 @@ ui <- fluidPage(
                                                                          "6 - Rural" = "6"
                                                              ),
                                                              selected = c("1","6")
-                                          )),
-                                                                  
-                            )#End Right column NBA player display
+                                          )
+                                          ),
+                                                      
+                            )#End Right column Urban Index
                 
-               )#end fluid row
-                        
-               ),#end tabpanel Masking by Region
+               ),#end fluid row
+               fluidRow( column(12, style = "margin-top:23px;margin-left:35 px;",
+                                submitButton(text = "Update Graphic")
+               ))       
+               ),#end tabpanel County View
                
-               tabPanel("Panel 2"
-               )#end tabpanel NBA
+               tabPanel("Map View",
+                        plotOutput('Covid_Map'),
+                        
+                        hr(),
+                        
+                        fluidRow( 
+                            column(6, div(align = "left",h3("Time Period (Covid Cases Only)"),
+                                          
+                                          radioButtons(inputId ="peaks2",
+                                                             label = "",
+                                                             choices = c("Peak 1 (7/20/20)" = "pk1",
+                                                                         "Peak 2 (1/8/21)" = "pk2",
+                                                                         "Peak 3 (8/30/21)" = "pk3"
+                                                             ),
+                                                             selected = "pk1"))
+                                   
+                                   
+                            ),#End Left Column Time Period
+                            
+                            column(6,
+                                   div(align = "left",h3("Data"),
+                                       radioButtons(inputId ="data",
+                                                          label = "",
+                                                          choices = c("Covid Cases" = "CC",
+                                                                      "Urban Index" = "URB",
+                                                                      "Median-Income" = "MI"
+                                                          ),
+                                                          selected = "CC"
+                                       ),
+                                       
+                                   )# end div
+                            ),#end middle Region
+                            
+                            
+                        ),#end fluid row
+                        fluidRow( column(12, style = "margin-top:100px;margin-left:35 px;",
+                        submitButton(text = "Update Map")
+                        ))
+               )#end tab panel map view
                
     )#End NavbarPage
     
@@ -103,7 +157,7 @@ ui <- fluidPage(
 
 
 server <- function(input, output, session) {
-    output$Covid_Masking <- renderPlot({
+    output$Covid_Econ <- renderPlot({
         
     })#end render plot
 
