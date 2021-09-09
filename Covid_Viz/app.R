@@ -82,7 +82,7 @@ ui <- fluidPage(
                           #input choices
                           
                           # select peak
-                          selectInput(inputId = "s_peak", 
+                          checkboxGroupInput(inputId = "s_peak", 
                                       label = ("Select Peak"), 
                                       choices = c("Peak 1 (7/20/20)" ="peak 1",
                                                   "Peak 2 (1/8/21)" = "peak 2",
@@ -119,7 +119,7 @@ ui <- fluidPage(
                                         label = ("Slide for the range of 
                                                  cases-per-1000-people to display"), 
                                         min = 0, 
-                                        max = 8, 
+                                        max = 7, 
                                         step = 1,
                                         value = c(0, 4))
                             
@@ -183,11 +183,11 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   
-  # filter data according to input choices
+  # filter data according to input choices for dotplot
   selectedData <- reactive({
     df %>%
       filter(Region %in%  input$s_region,
-             peaks == input$s_peak,
+             peaks %in% input$s_peak,
              urban_code  %in% input$s_urban
       )
   })
@@ -200,6 +200,7 @@ server <- function(input, output) {
       labs(x = if(input$s_factor == "median.income"){"Median Income"} else {"% Deomcrat Votes"},
            y = "Covid Case per 1000")+
       scale_y_continuous(limits = input$slider) +
+      facet_wrap(~peaks) +
       theme_bw()
   })
   
