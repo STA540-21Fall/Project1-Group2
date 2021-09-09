@@ -20,25 +20,18 @@ library(shinydashboard)
 
 # load data
 
+df <- read.csv("data/final.txt") %>%
+  mutate(Region = ifelse(is.na(Region), "Caribbean island and unincorporated territory", Region)) %>%
+  mutate(case_per = cases/population*100)
 
 
-
-#wrangle data here
-
-
-
-#As of now you will be able to search from all NCAA players
-#After selecting an NCAA player and searching you can then
-#Select from the X NBA players most similar to your selected player
-#Then you by hitting the compare button a radar graph will display
-#Both players' college stats
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
     theme = shinytheme(theme = "yeti"),
     
     # Application title
-  #  titlePanel("Covid Visualizations"),
+    # titlePanel("Covid Visualizations"),
     navbarPage("Socio-Economic Status vs. Covid Cases",
                
                tabPanel("Introduction",
@@ -56,59 +49,55 @@ ui <- fluidPage(
                
                tabPanel("County View",
                         
-                        plotOutput('Covid_Econ'),
-                        
-                        hr(),
-                        
-                        fluidRow( 
-                            column(4, div(align = "left",h3("Time Period"),
-                                      
-                                       checkboxGroupInput(inputId ="peaks",
-                                                          label = "",
-                                                          choices = c("Peak 1 (7/20/20)" = "pk1",
-                                                                      "Peak 2 (1/8/21)" = "pk2",
-                                                                      "Peak 3 (8/30/21)" = "pk3"
-                                                          ),
-                                                          selected = "pk1"))
-                                      
-                                                                 
-                            ),#End Left Column Time Period
-                           
-                            column(4,
-                                   div(align = "left",h3("Regions"),
-                                       checkboxGroupInput(inputId ="regions",
-                                                          label = "",
-                                                          choices = c("Northeast" = "NE",
-                                                                      "South" = "STH",
-                                                                      "Midwest" = "MW",
-                                                                      "West" = "WE"
-                                                            ),
-                                                          selected = c("NE","STH","MW","WE")
-                                                          )
-                                   )# end div
-                            ),#end middle Region
+                        sidebarLayout(
+                          sidebarPanel(
+                            #input choices
                             
-                            column(4, div(align = "left",h3("Urban Index"),
-                                          checkboxGroupInput(inputId ="urban",
-                                                             label = "",
-                                                             choices = c("1 - Urban" = "1",
-                                                                         "2" = "2",
-                                                                         "3" = "3",
-                                                                         "4" = "4",
-                                                                         "5" = "5",
-                                                                         "6 - Rural" = "6"
-                                                             ),
-                                                             selected = c("1","6")
-                                          )
-                                          ),
-                                                      
-                            )#End Right column Urban Index
-                
-               ),#end fluid row
-               fluidRow( column(12, style = "margin-top:23px;margin-left:35 px;",
-                                submitButton(text = "Update Graphic")
-               ))       
-               ),#end tabpanel County View
+                            # select peak
+                            selectInput(inputId = "s_peak", 
+                                        label = ("select peak"), 
+                                        choices = unique(df$peak), 
+                                        selected = unique(df$peak)[1]),
+                            
+                            # select region
+                            selectInput(inputId = "s_region", 
+                                        label = ("select region"), 
+                                        choices = unique(df$Region), 
+                                        multiple = TRUE,
+                                        selected = unique(df$Region)[1]),
+                            
+                            uiOutput("s_state"),
+                            
+                            # select urban index
+                            checkboxGroupInput(inputId = "s_urban", 
+                                               label = ("select urbanization code(s)"), 
+                                               choices = seq(1, 6),
+                                               selected = c(1, 6)),
+                            
+                            # select factor
+                            radioButtons(inputId = "s_factor", 
+                                         label = ("select a factor"), 
+                                         choices = c("median.income", 
+                                                     "per_dem"), 
+                                         selected = "median.income"),
+                            
+                            # select range to display
+                            sliderInput(inputId = "slider", 
+                                        label = ("slide for the range of 
+                                                 cases-per-10-people to display"), 
+                                        min = 0, 
+                                        max = 50, 
+                                        step = 5,
+                                        value = c(0, 30))
+                            
+                          ), 
+                          
+                          mainPanel(
+                            # output plot
+                            plotOutput("dotplot")
+                          )
+                          ) #end sidebar layout
+                        ),#end tabpanel County View
                
                tabPanel("Map View",
                         plotOutput('Covid_Map'),
@@ -157,9 +146,33 @@ ui <- fluidPage(
 
 
 server <- function(input, output, session) {
-    output$Covid_Econ <- renderPlot({
-        
-    })#end render plot
+  
+  # filter data according to input choices
+  selectedData <- reactive({
+    df %>%
+      filter(Region %in%  input$s_region,
+             peaks == input$s_peak,
+             urban_code  %in% input$s_urban
+      )
+  })
+  
+  # update state choices according to region input
+  output$s_state = renderUI(
+    selectInput(inputId = "s_region", 
+                label = ("select state"), 
+                choices = c("None", 
+                            df$state[which(df$Region == input$s_region)]), 
+                selected = "None")
+  )
+  
+  # dotplot output
+  output$dotplot <- renderPlot({
+    ggplot(selectedData(), aes_string(x = input$s_factor, y = "case_per",
+                                      color = "Region")) +
+      geom_point(alpha = 0.4) +
+      scale_y_continuous(limits = input$slider) +
+      theme_bw()
+  })
 
 }#End server
 
