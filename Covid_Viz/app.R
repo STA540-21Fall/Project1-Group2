@@ -93,8 +93,8 @@ ui <- fluidPage(
                                       label = ("Select Region"), 
                                       choices = unique(df$Region), 
                                       multiple = TRUE,
-                                      selected = unique(df$Region)[1]),
-                          
+                                      selected = unique(df$Region)[1]), 
+
                           # select urban index
                           checkboxGroupInput(inputId = "s_urban", 
                                              label = ("Select Urbanization Level(s)"), 
@@ -105,31 +105,31 @@ ui <- fluidPage(
                                                          5,
                                                          "6-Rural"=6),
                                              selected = c(1, 6)),
-                          
-                          # select factor
-                          radioButtons(inputId = "s_factor", 
-                                       label = ("Select a Factor"), 
-                                       choices = c("Median Income" = "median.income", 
-                                                   "% Democrat Votes" = "per_dem"), 
-                                       selected = "median.income"),
-                          
-                          # select range to display
-                          sliderInput(inputId = "slider", 
-                                      label = ("Slide for the range of 
+                            
+                            # select factor
+                            radioButtons(inputId = "s_factor", 
+                                         label = ("Select a Factor"), 
+                                         choices = c("Median Income" = "median.income", 
+                                                     "% Democrat Votes" = "per_dem"), 
+                                         selected = "median.income"),
+                            
+                            # select range to display
+                            sliderInput(inputId = "slider", 
+                                        label = ("Slide for the range of 
                                                  cases-per-1000-people to display"), 
-                                      min = 0, 
-                                      max = 8, 
-                                      step = 1,
-                                      value = c(0, 4))
-                          
-                        ), #end sidebar panel
-                        
-                        mainPanel(
-                          # output plot
-                          plotOutput("dotplot")
-                        ) #end main panel
-                      ) #end sidebar layout
-             ),#end tabpanel County View
+                                        min = 0, 
+                                        max = 8, 
+                                        step = 1,
+                                        value = c(0, 4))
+                            
+                          ), #end sidebar panel
+                         
+                          mainPanel(
+                            # output plot
+                            plotOutput("dotplot")
+                          ) #end main panel
+                        ) #end sidebar layout
+               ),#end tabpanel County View
              
              tabPanel("Map View",
                       plotOutput('Covid_Map'),

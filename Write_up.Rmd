@@ -141,6 +141,7 @@ final_cases = cases_deaths %>%
   filter(fips!= "   NA") %>% 
   group_by(peaks, fips) %>% 
   summarise(cases = (max(cases) - min(cases))/7)
+
 final = final_cases %>% 
   mutate(year = case_when(peaks == "peak 1" ~ "2020",
                           peaks == "peak 2" ~ "2021",
@@ -152,7 +153,9 @@ final = final_cases %>%
   left_join(income, by = "fips") %>% 
   left_join(employment, by = c("year", "fips")) %>% 
   select(-year)
+
 write.csv(final, "data/final.csv")
+
 final %>% 
 group_by(peaks) %>% 
 summarise(cases = sum(cases))
