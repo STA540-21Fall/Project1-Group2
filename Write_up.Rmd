@@ -142,7 +142,6 @@ voting = rbind(voting, voting_nyc)
 ```
 
 ```{r merge data}
-
 employment = rbind(unemp2020, unemp2021)
 info = unique(cases_deaths[,c(2,3,4)])
 
@@ -169,3 +168,44 @@ final = final_cases %>%
 
 #write.csv(final, "data/final.csv")
 ```
+
+```{r map plots}
+library(urbnmapr)
+library(maps)
+library(sf)
+library(Rcpp)
+# install.packages("devtools")
+# devtools::install_github("UrbanInstitute/urbnmapr")
+
+final$income_group <- cut(final$median.income,
+                          breaks = c(0,40100,120400,Inf), 
+                          labels = c('Low Income','Middle Income','Upper Income'))
+
+counties <- get_urbn_map(map = "counties", sf = TRUE)
+total <- merge(counties, final_new, by.y = "fips", 
+                by.x = "county_fips")
+
+#median income total
+
+pal <- hcl.colors(3, "Inferno", rev = TRUE, alpha = 0.7)
+
+ggplot()+
+  geom_sf(data = total, mapping = aes(fill = income_group), color = "white", lwd = 0.1) +
+  scale_fill_manual(values = pal, drop = FALSE) +
+  theme_dark()
+
+final_peak1 = total %>% 
+  filter(peaks == "peak 1")
+
+#cases peak 1
+ggplot()+
+  geom_sf(data = final_peak1, mapping = aes(fill = cases), color = "white", lwd = 0.1) +
+  theme_dark()
+
+#unemployed rate peak 1
+ggplot()+
+  geom_sf(data = total, mapping = aes(fill = unemployed.rate), color = "white", 
+          lwd = 0.1) +
+  theme_dark()
+```
+
