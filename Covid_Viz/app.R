@@ -41,14 +41,14 @@ ui <- fluidPage(
                                      identified using background data. The peaks are July 20th 2020; January 8th 2021 and August 27th 2021.
                                         Selecting a date will display case data corresponding to the 7 day average of cases on that date."),
                                    h4("Regions"),p("The regions filter allows for selection of US counties based on 
-                                                     census designated region to anlyze trends in different regions of the country."),
+                                                     census designated region to anlyze trends in different regions of the country.
+                                                   To unselect regions use backspace."),
                                    h4("Urban Index"), p("The urban index filter allows for county data points to be filtered by
                                                           the NCHS urbanization classification index."), strong("1 = Urban, 6 = Rural"),
-                                   h4("Time Period:")),
+                          ),
                           tabPanel("Map View"),
                           "Data Insights",
                           tabPanel("Interesting County Views"),
-                          tabPanel("Interesting Map Views"),
                           "-----",
                           tabPanel("Data Sources",
                                    h2("Data Source"),
@@ -67,15 +67,15 @@ ui <- fluidPage(
                             
                             # select peak
                             selectInput(inputId = "s_peak", 
-                                        label = ("select peak"), 
+                                        label = ("Select Peak"), 
                                         choices = c("Peak 1 (7/20/20)" ="peak 1",
                                                     "Peak 2 (1/8/21)" = "peak 2",
-                                                    "Peak 3 (8/30/21)" ="peak 3"), 
+                                                    "Peak 3 (8/27/21)" ="peak 3"), 
                                         selected = unique(df$peaks)[1]),
                             
                             # select region
                             selectInput(inputId = "s_region", 
-                                        label = ("select region"), 
+                                        label = ("Select Region"), 
                                         choices = unique(df$Region), 
                                         multiple = TRUE,
                                         selected = unique(df$Region)[1]),
@@ -100,7 +100,7 @@ ui <- fluidPage(
                             
                             # select range to display
                             sliderInput(inputId = "slider", 
-                                        label = ("slide for the range of 
+                                        label = ("Slide for the range of 
                                                  cases-per-1000-people to display"), 
                                         min = 0, 
                                         max = 8, 
@@ -177,6 +177,8 @@ server <- function(input, output) {
     ggplot(selectedData(), aes_string(x = input$s_factor, y = "case_per",
                                       color = "Region")) +
       geom_point(alpha = 0.5, size = 2.5) +
+      labs(x = if(input$s_factor == "median.income"){"Median Income"} else {"% Deomcrat Votes"},
+           y = "Covid Case per 1000")+
       scale_y_continuous(limits = input$slider) +
       theme_bw()
   })
