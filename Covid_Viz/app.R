@@ -73,11 +73,11 @@ ui <- fluidPage(
                             # select range to display
                             sliderInput(inputId = "slider", 
                                         label = ("slide for the range of 
-                                                 cases-per-10-people to display"), 
+                                                 cases-per-100-people to display"), 
                                         min = 0, 
                                         max = 50, 
                                         step = 5,
-                                        value = c(0, 30))
+                                        value = c(0, 10))
                             
                           ), #end sidebar panel
                           
@@ -148,7 +148,7 @@ server <- function(input, output) {
   output$dotplot <- renderPlot({
     ggplot(selectedData(), aes_string(x = input$s_factor, y = "case_per",
                                       color = "Region")) +
-      geom_point(alpha = 0.4) +
+      geom_point(alpha = 0.5, size = 1.6) +
       scale_y_continuous(limits = input$slider) +
       theme_bw()
   })
