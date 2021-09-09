@@ -149,11 +149,11 @@ info = unique(cases_deaths[,c(2,3,4)])
 final_cases = cases_deaths %>% 
   mutate(peaks = case_when (date >= "2020-07-20" & date <= "2020-07-26" ~ "peak 1",
                             date >= "2021-01-08" & date <= "2021-01-14" ~ "peak 2",
-                            date >= "2021-08-30" & date <= "2021-09-05" ~ "peak 3")) %>%
+                            date >= "2021-08-23" & date <= "2021-08-29" ~ "peak 3")) %>%
   filter(!is.na(peaks)) %>% 
   filter(fips!= "   NA") %>% 
   group_by(peaks, fips) %>% 
-  summarise(cases = mean(cases))
+  summarise(cases = (max(cases) - min(cases))/7)
 
 final = final_cases %>% 
   mutate(year = case_when(peaks == "peak 1" ~ "2020",
@@ -167,5 +167,9 @@ final = final_cases %>%
   left_join(employment, by = c("year", "fips")) %>% 
   select(-year)
 
-#write.csv(final, "data/final.csv")
+write.csv(final, "data/final.csv")
+
+final %>% 
+group_by(peaks) %>% 
+summarise(cases = sum(cases))
 ```
