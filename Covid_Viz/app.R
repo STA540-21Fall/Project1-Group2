@@ -11,9 +11,11 @@ library(shinydashboard)
 
 # load data
 
-df <- read.csv("data/final.txt") %>%
+df <- read_csv("data/final_daily.txt") %>%
   mutate(Region = ifelse(is.na(Region), "Caribbean island and unincorporated territory", Region)) %>%
-  mutate(case_per = cases/population*100)
+  mutate(cases = ifelse(is.na(cases), 0, cases)) %>%
+  drop_na(population) %>%
+  mutate(case_per = cases/population*1000)
 
 
 
@@ -69,7 +71,7 @@ ui <- fluidPage(
                                         choices = c("Peak 1 (7/20/20)" ="peak 1",
                                                     "Peak 2 (1/8/21)" = "peak 2",
                                                     "Peak 3 (8/30/21)" ="peak 3"), 
-                                        selected = unique(df$peak)[1]),
+                                        selected = unique(df$peaks)[1]),
                             
                             # select region
                             selectInput(inputId = "s_region", 
@@ -99,11 +101,11 @@ ui <- fluidPage(
                             # select range to display
                             sliderInput(inputId = "slider", 
                                         label = ("slide for the range of 
-                                                 cases-per-100-people to display"), 
+                                                 cases-per-1000-people to display"), 
                                         min = 0, 
-                                        max = 50, 
-                                        step = 5,
-                                        value = c(0, 10))
+                                        max = 8, 
+                                        step = 1,
+                                        value = c(0, 4))
                             
                           ), #end sidebar panel
                           
@@ -174,7 +176,7 @@ server <- function(input, output) {
   output$dotplot <- renderPlot({
     ggplot(selectedData(), aes_string(x = input$s_factor, y = "case_per",
                                       color = "Region")) +
-      geom_point(alpha = 0.5, size = 1.6) +
+      geom_point(alpha = 0.5, size = 2.5) +
       scale_y_continuous(limits = input$slider) +
       theme_bw()
   })
