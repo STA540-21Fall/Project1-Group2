@@ -9,6 +9,7 @@ library(urbnmapr)
 library(maps)
 library(sf)
 library(Rcpp)
+library(tidyverse)
 
 
 ### DATA WRANGLING STEER CLEAR ###
@@ -60,8 +61,8 @@ ui <- fluidPage(
                         tabPanel("Map View",
                                  h2("County Level Map Plot"),
                                  p("The \"Map View\" tab is designed to give customized 
-                                        map plots on Covid cases, median income and urbanization
-                                   under each peak.")),
+                                        map plots on Covid cases, unemployment and median income
+                                   for each covid case peak.")),
                         "Data Insights",
                         tabPanel("Interesting County Views"),
                         "-----",
@@ -153,7 +154,8 @@ ui <- fluidPage(
                         column(6,
                                div(align = "left",h3("Data"),
                                    varSelectInput("variable", "Variable:",
-                                                  total_rep, selected = "case_per"),
+                                                  total_rep,
+                                                  selected = "case_per"),
                                    
                                    # radioButtons(inputId ="data",
                                    #                    label = "",
@@ -211,8 +213,10 @@ server <- function(input, output) {
   # map output
   output$Covid_Map <- renderPlot({
     ggplot()+
-      geom_sf(selectedData_new(), mapping = aes(fill = !!input$variable), color = "white", lwd = 0.1) +
-      theme_dark()
+      geom_sf(selectedData_new(), mapping = aes(fill = !!input$variable), color = "grey", lwd = 0.01) +
+      theme_bw()+
+      theme(axis.text.x = element_blank(),axis.text.y = element_blank()) +
+      if(!!input$variable == "case_per"){scale_fill_viridis_c(option = "magma",limits = c(0,3))}else{}
   })
   
 }#End server
