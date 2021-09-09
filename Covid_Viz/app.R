@@ -1,12 +1,3 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
 library(shinythemes)
 library(ggplot2)
@@ -45,7 +36,7 @@ ui <- fluidPage(
                             "-----",
                             tabPanel("Data Sources")
                         )
-               ),#end tabpanel 2
+               ),#end tabpanel introduction
                
                tabPanel("County View",
                         
@@ -65,9 +56,7 @@ ui <- fluidPage(
                                         choices = unique(df$Region), 
                                         multiple = TRUE,
                                         selected = unique(df$Region)[1]),
-                            
-                            uiOutput("s_state"),
-                            
+
                             # select urban index
                             checkboxGroupInput(inputId = "s_urban", 
                                                label = ("select urbanization code(s)"), 
@@ -90,12 +79,12 @@ ui <- fluidPage(
                                         step = 5,
                                         value = c(0, 30))
                             
-                          ), 
+                          ), #end sidebar panel
                           
                           mainPanel(
                             # output plot
                             plotOutput("dotplot")
-                          )
+                          ) #end main panel
                           ) #end sidebar layout
                         ),#end tabpanel County View
                
@@ -133,10 +122,8 @@ ui <- fluidPage(
                             ),#end middle Region
                             
                             
-                        ),#end fluid row
-                        fluidRow( column(12, style = "margin-top:100px;margin-left:35 px;",
-                        submitButton(text = "Update Map")
-                        ))
+                        )#end fluid row
+                      
                )#end tab panel map view
                
     )#End NavbarPage
@@ -145,7 +132,8 @@ ui <- fluidPage(
 )#End UI
 
 
-server <- function(input, output, session) {
+server <- function(input, output) {
+  
   
   # filter data according to input choices
   selectedData <- reactive({
@@ -155,15 +143,6 @@ server <- function(input, output, session) {
              urban_code  %in% input$s_urban
       )
   })
-  
-  # update state choices according to region input
-  output$s_state = renderUI(
-    selectInput(inputId = "s_region", 
-                label = ("select state"), 
-                choices = c("None", 
-                            df$state[which(df$Region == input$s_region)]), 
-                selected = "None")
-  )
   
   # dotplot output
   output$dotplot <- renderPlot({
