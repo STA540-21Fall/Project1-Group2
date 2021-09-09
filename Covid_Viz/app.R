@@ -27,16 +27,35 @@ ui <- fluidPage(
                
                tabPanel("Introduction",
                         navlistPanel(
-                            "Instructions",
-                            tabPanel("County View"),
-                            tabPanel("Map View"),
-                            "Data Insights",
-                            tabPanel("Interesting County Views"),
-                            tabPanel("Interesting Map Views"),
-                            "-----",
-                            tabPanel("Data Sources")
+                          "Instructions",
+                          tabPanel("County View",
+                                   h2("County Level Scatter Plot"),
+                                   p("The \"County View\" tab is designed to give customized 
+                                        scatterplots comparing Covid cases to politcal 
+                                        affiliation or median income."),
+                                   h3("Data Filters"),
+                                   h4("Time Period"),p("The time period filter allows for selecting data corresponding 
+                                     to the 7 day average of covid cases on that date.3 Peaks in covid cases have been 
+                                     identified using background data. The peaks are July 20th 2020; January 8th 2021 and August 27th 2021.
+                                        Selecting a date will display case data corresponding to the 7 day average of cases on that date."),
+                                   h4("Regions"),p("The regions filter allows for selection of US counties based on 
+                                                     census designated region to anlyze trends in different regions of the country."),
+                                   h4("Urban Index"), p("The urban index filter allows for county data points to be filtered by
+                                                          the NCHS urbanization classification index."), strong("1 = Urban, 6 = Rural"),
+                                   h4("Time Period:")),
+                          tabPanel("Map View"),
+                          "Data Insights",
+                          tabPanel("Interesting County Views"),
+                          tabPanel("Interesting Map Views"),
+                          "-----",
+                          tabPanel("Data Sources",
+                                   h2("Data Source"),
+                                   h4("Median County Income (2019) - U.S. of labor statistics"),
+                                   h4("Urbanization Index - CDC NCHS Urban-Rural Classification"),
+                                   h4("Covid-19 Case Counts by County - New York Times"),
+                                   h4("U.S. 2020 Election Data by County - Tony McGovern public Github data"))
                         )
-               ),#end tabpanel introduction
+               ),#end tabpanel 2
                
                tabPanel("County View",
                         
@@ -47,7 +66,9 @@ ui <- fluidPage(
                             # select peak
                             selectInput(inputId = "s_peak", 
                                         label = ("select peak"), 
-                                        choices = unique(df$peak), 
+                                        choices = c("Peak 1 (7/20/20)" ="peak 1",
+                                                    "Peak 2 (1/8/21)" = "peak 2",
+                                                    "Peak 3 (8/30/21)" ="peak 3"), 
                                         selected = unique(df$peak)[1]),
                             
                             # select region
@@ -59,15 +80,20 @@ ui <- fluidPage(
 
                             # select urban index
                             checkboxGroupInput(inputId = "s_urban", 
-                                               label = ("select urbanization code(s)"), 
-                                               choices = seq(1, 6),
+                                               label = ("Select Urbanization Level(s)"), 
+                                               choices = c("1-Urban"=1,
+                                                           2,
+                                                           3,
+                                                           4,
+                                                           5,
+                                                           "6-Rural"=6),
                                                selected = c(1, 6)),
                             
                             # select factor
                             radioButtons(inputId = "s_factor", 
-                                         label = ("select a factor"), 
-                                         choices = c("median.income", 
-                                                     "per_dem"), 
+                                         label = ("Select a Factor"), 
+                                         choices = c("Median Income" = "median.income", 
+                                                     "% Democrat Votes" = "per_dem"), 
                                          selected = "median.income"),
                             
                             # select range to display
