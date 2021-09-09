@@ -148,7 +148,7 @@ server <- function(input, output) {
   output$dotplot <- renderPlot({
     ggplot(selectedData(), aes_string(x = input$s_factor, y = "case_per",
                                       color = "Region")) +
-      geom_point(alpha = 0.5, size = 1.6) +
+      geom_point(alpha = 0.5, size = 2.5) +
       scale_y_continuous(limits = input$slider) +
       theme_bw()
   })
