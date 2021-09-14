@@ -201,4 +201,23 @@ final$Income.Group <- cut(final$Median.Income,
 
 # Visualizations
 
+## Scatterplot
+
+The "County View" tab is designed to give customized scatterplots comparing Covid cases to politcal voting or median income on county level. The visualization allows users to select the peak for which they want to compare the relationship between cases and voting and median income. The region and urban index filter allows for the visualization of a smaller user-specified sample. Furthermore, the user can click or drag on the point or points they are interested in to see a more detailed information including county name, state, region, case per 1000 people and the factor they have chosen before.
+
+
+## Map
+
+The "Map View" tab is designed to give customized map plots on Covid cases, unemployment and median income for each covid case peak. The median-income and unemployment data is static and does not change between time periods. While selecting a peak displayed a map of the 7-day averages of covid cases from the specified date. Blank counties and states in the map are caused by a lack of county or state level data of the variable.
+
+
+
 # Conclusions
+
+Overall, our visulizations demonstrate a clear negative relationship between cases per 1000 people and median income and between cases per 1000 people and percentage of population voted for the Democrates in the 2020 election on county level in all of the three peaks, meaning that counties with higher income level and proportion of people supporting the Democrates party tend to have less cases during the pandemic. The relationships are more flat in peak 1 and more negative in peak 3.
+
+Among all the regions, we observe some interesting trends for the South region and the Northeast region regarding the trend between cases per 1000 people and the political factor -- percentage of people voted for the Democratic party and that between cases and the socioeconomic factor -- median income.
+
+For the South region, some of the counties from the lower- to mid- income group were having significantly more cases than counties in other regions in peak 3, especially for which the overall cases are less than the overall cases in peak 2. Meanwhile more counties in higher income group in the South region were having less cases in peak 3. This also corresponds to what we can observe from the map view where cases are concentrated in the southwest part of Florida. Consequently, the slope between cases and median income is much steeper in peak 3 than that in peak 2.
+
+As for the Northeast region, we surprisingly observe a positive slope between cases and median income in peak 2, meaning that counties with higher median income were having larger number of average cases; this is uncommon for all other regions. Moreover, the slope between cases and percentage voted for the Democrates is also slightly positive for the Northeast Region in peak 2.
