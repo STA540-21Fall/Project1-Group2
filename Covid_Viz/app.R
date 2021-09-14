@@ -46,25 +46,35 @@ ui <- fluidPage(
                                  h2("County Level Scatter Plot"),
                                  p("The \"County View\" tab is designed to give customized 
                                         scatterplots comparing Covid cases to politcal 
-                                        affiliation or median income."),
+                                        voting or median income on a county level."),
                                  h3("Data Filters"),
-                                 h4("Time Period"),p("The time period filter allows for selecting data corresponding 
-                                     to the 7 day average of covid cases on that date.3 Peaks in covid cases have been 
-                                     identified using background data. The peaks are July 20th 2020; January 8th 2021 and August 27th 2021.
+                                 h4("Peaks"),p("The Peak filter allows for selecting data corresponding 
+                                     to the 7 day average of covid cases on the specified date.3 Peaks in covid cases have been 
+                                     identified using background data. The peaks chosen are July 20th 2020; January 8th 2021 and August 27th 2021.
                                         Selecting a date will display case data corresponding to the 7 day average of cases on that date."),
                                  h4("Regions"),p("The regions filter allows for selection of US counties based on 
                                                      census designated region to anlyze trends in different regions of the country.
                                                    To unselect regions use backspace."),
                                  h4("Urban Index"), p("The urban index filter allows for county data points to be filtered by
                                                           the NCHS urbanization classification index."), strong("1 = Urban, 6 = Rural"),
+                                 h4("Factor"), p("The factor selection allows for the x-axis variable to be toggled between
+                                                 median county income and % democrat votes."),
+                                 h4("Slide for Cases-per-1000"),p("The slide allows for the y-axis range to be varied to allow for easier
+                                                                   viewing of specific areas of the plot."),
+                                 h3("Plot Information"),
+                                 h4("Indiviudal County Information"),p("CLicking and dragging on the plot will create a small square on the plots.
+                                                                       The points inside of this square will have their data information displayed 
+                                                                       below the plot sorted in descending order of Covid Cases per 1000."),
+                                 h3("Region Trendlines"), p("The trendlines on the scatterplot are linear regression lines of best fit for each region.")
                         ),
                         tabPanel("Map View",
                                  h2("County Level Map Plot"),
                                  p("The \"Map View\" tab is designed to give customized 
                                         map plots on Covid cases, unemployment and median income
                                    for each covid case peak.")),
-                        "Data Insights",
-                        tabPanel("Interesting County Views"),
+                                 p("The median-income and unemployment data is static and does not change between time periods. 
+                                   While selecting a peak displayed a map of the 7-day averages of covid cases from the specified date.
+                                   Blank counties and states in the map are caused by a lack of county or state level data of the variable."),
                         "-----",
                         tabPanel("Data Sources",
                                  h2("Data Source"),
@@ -137,6 +147,7 @@ ui <- fluidPage(
              
              tabPanel("Map View",
                       plotOutput('Covid_Map'),
+                      plotOutput('COivd_Map2'),
                       
                       hr(),
                       
@@ -159,16 +170,7 @@ ui <- fluidPage(
                                    varSelectInput("variable", "Variable:",
                                                   total_rep,
                                                   selected = "case_per"),
-                                   
-                                   # radioButtons(inputId ="data",
-                                   #                    label = "",
-                                   #                    choices = c("Covid Cases" = "cases",
-                                   #                                "Urban Index" = "unemployed.rate",
-                                   #                                "Median-Income" = "income_group"
-                                   #                    ),
-                                   #                    selected = "cases"
-                                   # ),
-                                   
+                                  
                                )# end div
                         ),#end middle Region
                         
@@ -234,7 +236,7 @@ server <- function(input, output) {
             arrange(desc(`cases per 1000 people`)), 
           row.names = FALSE)
     }
-      else {cat("brush on point(s) to see details")}
+      else {cat("Click and drag on point(s) to see details")}
 
   })
   
