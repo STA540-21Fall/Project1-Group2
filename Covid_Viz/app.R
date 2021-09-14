@@ -71,10 +71,10 @@ ui <- fluidPage(
                                  h2("County Level Map Plot"),
                                  p("The \"Map View\" tab is designed to give customized 
                                         map plots on Covid cases, unemployment and median income
-                                   for each covid case peak.")),
+                                   for each covid case peak."),
                                  p("The median-income and unemployment data is static and does not change between time periods. 
                                    While selecting a peak displayed a map of the 7-day averages of covid cases from the specified date.
-                                   Blank counties and states in the map are caused by a lack of county or state level data of the variable."),
+                                   Blank counties and states in the map are caused by a lack of county or state level data of the variable.")),
                         "-----",
                         tabPanel("Data Sources",
                                  h2("Data Source"),
