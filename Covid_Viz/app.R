@@ -218,7 +218,7 @@ server <- function(input, output) {
   
   observeEvent(input$dot_brush,{
     selected_points(brushedPoints(selectedData() %>%
-                                    select(county, Region, peaks, !!input$s_factor, case_per), 
+                                    select(county, Region, peaks, state, !!input$s_factor, case_per), 
                                   input$dot_brush))
   })
   
