@@ -174,7 +174,29 @@ final = final_cases %>%
   left_join(employment, by = c("year", "fips")) %>% 
   select(-year)
 
-#write.csv(final, "data/final.csv")
+
+# modified and standarized dataframe for plotting
+final <- final %>%
+  mutate(Region = ifelse(is.na(Region), "Caribbean island and unincorporated territory", Region)) %>%
+  mutate(cases = ifelse(is.na(cases), 0, cases)) %>%
+  drop_na(population, median.income, unemployed.rate) %>%
+  mutate(Case.per = cases/population*1000,
+         peaks = str_to_title(peaks)) %>%
+  rename(County = county,
+         State = state,
+         Median.Income = median.income,
+         Unemployed.Rate = unemployed.rate,
+         Urban.Code = urban_code,
+         Per.Vote.Dem = per_dem,
+         Peaks = peaks)
+
+final$Income.Group <- cut(final$Median.Income,
+                       breaks = c(0,40100,120400,Inf), 
+                       labels = c('Low Income','Middle Income','Upper Income'))
+
+
+# write.csv(final, "data/final.csv")
+
 ```
 
 # Visualizations
