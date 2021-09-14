@@ -83,7 +83,7 @@ ui <- fluidPage(
                           
                           # select peak
                           checkboxGroupInput(inputId = "s_peak", 
-                                      label = ("Select Peak"), 
+                                      label = ("Select Peak(s)"), 
                                       choices = c("Peak 1 (7/20/20)" ="peak 1",
                                                   "Peak 2 (1/8/21)" = "peak 2",
                                                   "Peak 3 (8/27/21)" ="peak 3"), 
@@ -91,14 +91,14 @@ ui <- fluidPage(
                           
                           # select region
                           selectInput(inputId = "s_region", 
-                                      label = ("Select Region"), 
+                                      label = ("Select Region(s)"), 
                                       choices = unique(df$Region), 
                                       multiple = TRUE,
                                       selected = unique(df$Region)[1]), 
                           
                           # select urban index
                           checkboxGroupInput(inputId = "s_urban", 
-                                             label = ("Select Urbanization Level(s)"), 
+                                             label = ("Select Urbanization Level(s) to display"), 
                                              choices = c("1-Urban"=1,
                                                          2,
                                                          3,
@@ -120,8 +120,8 @@ ui <- fluidPage(
                                                  cases-per-1000-people to display"), 
                                       min = 0, 
                                       max = 8, 
-                                      step = 1,
-                                      value = c(0, 4))
+                                      step = 0.5,
+                                      value = c(0, 3))
                           
                         ), #end sidebar panel
                         
@@ -199,16 +199,18 @@ server <- function(input, output) {
   # dotplot output
   output$dotplot <- renderPlot({
     ggplot(selectedData(), aes_string(x = input$s_factor, y = "case_per",
-                                      color = "Region")) +
+                                      color = "Region", group = "Region")) +
       geom_point(alpha = 0.5, size = 2.5) +
+      geom_smooth(se = FALSE, method = "lm", size = 0.7) +
+      theme_bw() +
       labs(x = if(input$s_factor == "median.income"){"Median Income"} else {"% Deomcrat Votes"},
            y = "Covid Case per 1000",
            title = paste0("Covid Case per 1000 people vs. ", 
-                          if(input$s_factor == "median.income"){"Median Income"} 
-                          else {"% Deomcrat Votes"}))+
+                     if(input$s_factor == "median.income"){"Median Income"}
+                      else {"% Deomcrat Votes"})) +
+      theme(plot.title = element_text(size = 25)) +
       scale_y_continuous(limits = input$slider) +
-      facet_wrap(~peaks) +
-      theme_bw()
+      facet_wrap(~peaks) 
   })
   
   # text output by brushing
@@ -226,12 +228,13 @@ server <- function(input, output) {
     if (!is.null(input$dot_brush)) {
     print(selected_points() %>%
             as.data.frame() %>%
+            mutate(case_per = round(case_per, 2)) %>%
             rename(`cases per 1000 people` = case_per,
                    region = Region) %>%
-            arrange(desc(!!input$s_factor)), 
+            arrange(desc(`cases per 1000 people`)), 
           row.names = FALSE)
     }
-      else {invisible()}
+      else {cat("brush on point(s) to see details")}
 
   })
   
