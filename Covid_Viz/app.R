@@ -28,7 +28,7 @@ df$income_group <- cut(df$median.income,
 counties <- get_urbn_map(map = "counties", sf = TRUE)
 total <- merge(counties, df, by.x = "county_fips", by.y = "fips")
 total_rep <- total %>% 
-  select(c("case_per","income_group","unemployed.rate"))
+  select(c("income_group","unemployed.rate"))
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -132,11 +132,12 @@ ui <- fluidPage(
                ),#end tabpanel County View
              
              tabPanel("Map View",
-                      plotOutput('Covid_Map'),
-                      
+                      splitLayout(cellWidths = c("50%", "50%"),
+                                  plotOutput('Covid_Map'),
+                                  plotOutput('Covid_Map2')),
                       hr(),
                       
-                      fluidRow( 
+                      fluidRow(
                         column(6, div(align = "left",h3("Time Period (Covid Cases Only)"),
                                       
                                       radioButtons(inputId ="peaks2",
@@ -150,20 +151,12 @@ ui <- fluidPage(
                                
                         ),#End Left Column Time Period
                         
+                        hr(),
+                        
                         column(6,
                                div(align = "left",h3("Data"),
                                    varSelectInput("variable", "Variable:",
-                                                  total_rep, selected = "case_per"),
-                                   
-                                   # radioButtons(inputId ="data",
-                                   #                    label = "",
-                                   #                    choices = c("Covid Cases" = "cases",
-                                   #                                "Urban Index" = "unemployed.rate",
-                                   #                                "Median-Income" = "income_group"
-                                   #                    ),
-                                   #                    selected = "cases"
-                                   # ),
-                                   
+                                                  total_rep, selected = "unemployed.rate"),
                                )# end div
                         ),#end middle Region
                         
@@ -208,8 +201,15 @@ server <- function(input, output) {
       filter(peaks == input$peaks2)
   })
   
-  # map output
+  # map output for cases
   output$Covid_Map <- renderPlot({
+    ggplot()+
+      geom_sf(selectedData_new(), mapping = aes(fill = "case_per"), color = "white", lwd = 0.1) +
+      theme_dark()
+  })
+  
+  # map output for urban or income 
+  output$Covid_Map2 <- renderPlot({
     ggplot()+
       geom_sf(selectedData_new(), mapping = aes(fill = !!input$variable), color = "white", lwd = 0.1) +
       theme_dark()
