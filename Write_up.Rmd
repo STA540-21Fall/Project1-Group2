@@ -1,8 +1,8 @@
 ---
 title: "Project1_Group2_writeup"
-author: "Michael Sarkis,,,"
+author: "Michael Sarkis,Xige Huang,Yanqin Shen,Lingyu Zhou"
 date: "8/31/2021"
-output: html_document
+output: pdf_document
 ---
 
 ```{r}
@@ -12,37 +12,57 @@ library(dplyr)
 ```
 
 
-# Analysis Plan
+# Background, motivation, objective
 
-## Data
+# Data acquiring and cleaning
 
-Income_Unemployment - Median County Income and Unemployment rates
-Urbanization_Index - County level urbanization measure
-Vaccinations - County level vaccination data
-us-counties - Cases, Deaths and Hospitalizations
+We got the county-level Covid-19 cases data from New York Times Github repository. The dataset contains cumulative cases for each county in each day. For the socioeconomic data, we got 2013 rural-urban continuum codes which indicates degree of urbanization, 2019 median household income and 2020 unemployment rate from !!data source !! for each county.  Also, in order to get the latest socioeconomic information in the United States, we obtained 2021 unemployment rate from !!data source !!. In addition to socioeconomic factors, we also got 2020 US election data from !!data source !!. We chose to use the percentage of people who voted for Democrats in each county. For further analysis, we also decided to include the region each county belongs to from !!data source !! and each county's geographical information from Simplemaps.
 
-## Analysis Ideas
+In order to merge datasets together, all the datasets we have include county FIPS code. Using FIPS code is safer than county and state names because some states have same county names. However, county FIPS codes have different formats in different datasets. Some datasets include both 4-digit and 5-digit FIPS codes and 2021 unemployment data separates state and county FIPS codes into two columns. Finally, we decided to transform all FIPS codes into 5-digit by adding zeros before the codes having 4 digits and combining state and county FIPS into one column for 2021 unemployment data.
 
+Also, since we have different unemployment data for 2020 and 2021, we decided to separate 2019 median income and 2020 unemployment data, and add a temporary variable year for each year's unemployment data for future merging steps.
 
-1. Predicting Covid Cases by Median-Income, Vaccination Rate, Urbanization
+In the case data, we figured out that there are some missing values in FIPS Code. Most of these observations have unknown county names and we ignored these observations. There are also two counties with missing FIPS code: Joplin and Kansas City in Missouri. Since the information of these two counties are also missing in other datasets, we decided to exclude them. The major issue is that in case data, New York City is considered as a whole. However, in other datasets, New York City is separated into five counties. Thus, we decided to combine the information from counties in New York City together in the datasets other than case data. For household median income and geographic data, we calculated the average. Also, we calculated the unemployment rate by $\frac{\sum unemployed}{\sum unemployed + \sum employed}$ and the percentage of people who voted for Democrats by $\frac{\sum voting\ for\ democrats}{\sum total\ votes}$.
 
-2. Predicting Mask Use by Median Income, Urbanization, Vaccination Rate
+In order to get the 7-day average for the three peaks we picked, we first created the variable that indicates which peak each day is in. Then ,we excluded the observations that are not recorded in the peaks. Since we have cumulative cases in the data, we calculated the 7-day average by $\frac{\max cases - \min cases}{7}$. 
 
-TASKS TO DO
+Finally, we created a year variable by peak information and merged all the datasets into the final dataset. Here is the information of our final dataset.
 
-0. Merge Data
+\begin{center}
+\begin{tabular}{ |c|c| } 
+ \hline
+ \multicolumn{2}{|c|}{Final dataset: 9625 observations} \\
+  \hline
+ peaks & indicating which peak the observation is in \\ 
+ \hline
+ fips &  US county FIPS code \\ 
+ \hline
+ cases & 7-day average cases\\
+ \hline
+ county & county name\\
+ \hline
+ state & state name \\
+ \hline
+ Region & region name: Midwest,Northeast,South,West\\
+ \hline
+ lat & latitude of county center\\
+ \hline
+ lng & longitude of county center\\
+ \hline
+ population & county population size\\
+ \hline
+ per\_dem & percentage of people voting for Democrats\\
+ \hline
+ urban\_code & 2013 rural-urban continuum codes\\
+ \hline
+ median.income & household median income\\
+ \hline
+ unemployed.rate & unemployment rate\\
+ \hline
+\end{tabular}
+\end{center}
 
-1. Decide on final goal
-
-2. Decide on data to use
-
-3. Discuss possible models
-
-##  Merge data
-
-NA values for FIPS code in cases_death
-
-```{r read_data}
+```{r read_data, echo = FALSE}
 cases_deaths = read.csv("data/us-counties.csv")[,1:5]
 income_unemp = read_excel("data/Income_Unemployment.xlsx", skip = 4)[,c(1,4,88,89,90,91)]
 unemp2021 = read.table("data/labor_force_latest.txt", 
@@ -56,7 +76,7 @@ region = read.table("data/us_regions.txt", sep = ",", header = TRUE)[,c(1,3)]
 geographic = read.csv("data/uscounties.csv")[,c(4,7,8,9)]
 ```
 
-```{r fips cleaning}
+```{r fips cleaning, echo = FALSE}
 #get same format and name for FIPS code, date and year
 cases_deaths$fips = formatC(cases_deaths$fips, width = 5, format = "d", flag = "0")
 cases_deaths$date = as.Date(cases_deaths$date)
@@ -79,7 +99,7 @@ names(geographic)[1] = "fips"
 ```
 
 
-```{r combining nyc}
+```{r combining nyc, echo = FALSE}
 cases_deaths[cases_deaths$county == "New York City",]$fips = "nyc"
 nyc = c("36005","36047","36061","36081","36085")
 geographic_nyc = geographic %>% 
@@ -130,7 +150,7 @@ voting= voting[,c(1,4)] %>%
 voting = rbind(voting, voting_nyc)
 ```
 
-```{r merge data}
+```{r merge data, echo = FALSE}
 employment = rbind(unemp2020, unemp2021)
 info = unique(cases_deaths[,c(2,3,4)])
 final_cases = cases_deaths %>% 
@@ -154,9 +174,9 @@ final = final_cases %>%
   left_join(employment, by = c("year", "fips")) %>% 
   select(-year)
 
-write.csv(final, "data/final.csv")
-
-final %>% 
-group_by(peaks) %>% 
-summarise(cases = sum(cases))
+#write.csv(final, "data/final.csv")
 ```
+
+# Visualizations
+
+# Conclusions
