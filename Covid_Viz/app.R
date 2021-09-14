@@ -19,7 +19,7 @@ library(tidyverse)
 df <- read_csv("data/final_daily.txt") %>%
   mutate(Region = ifelse(is.na(Region), "Caribbean island and unincorporated territory", Region)) %>%
   mutate(cases = ifelse(is.na(cases), 0, cases)) %>%
-  drop_na(population) %>%
+  drop_na(population, median.income, unemployed.rate) %>%
   mutate(case_per = cases/population*1000)
 
 df$income_group <- cut(df$median.income,
@@ -82,7 +82,7 @@ ui <- fluidPage(
                           #input choices
                           
                           # select peak
-                          selectInput(inputId = "s_peak", 
+                          checkboxGroupInput(inputId = "s_peak", 
                                       label = ("Select Peak"), 
                                       choices = c("Peak 1 (7/20/20)" ="peak 1",
                                                   "Peak 2 (1/8/21)" = "peak 2",
@@ -95,7 +95,7 @@ ui <- fluidPage(
                                       choices = unique(df$Region), 
                                       multiple = TRUE,
                                       selected = unique(df$Region)[1]), 
-
+                          
                           # select urban index
                           checkboxGroupInput(inputId = "s_urban", 
                                              label = ("Select Urbanization Level(s)"), 
@@ -106,31 +106,34 @@ ui <- fluidPage(
                                                          5,
                                                          "6-Rural"=6),
                                              selected = c(1, 6)),
-                            
-                            # select factor
-                            radioButtons(inputId = "s_factor", 
-                                         label = ("Select a Factor"), 
-                                         choices = c("Median Income" = "median.income", 
-                                                     "% Democrat Votes" = "per_dem"), 
-                                         selected = "median.income"),
-                            
-                            # select range to display
-                            sliderInput(inputId = "slider", 
-                                        label = ("Slide for the range of 
+                          
+                          # select factor
+                          radioButtons(inputId = "s_factor", 
+                                       label = ("Select a Factor"), 
+                                       choices = c("Median Income" = "median.income", 
+                                                   "% Democrat Votes" = "per_dem"), 
+                                       selected = "median.income"),
+                          
+                          # select range to display
+                          sliderInput(inputId = "slider", 
+                                      label = ("Slide for the range of 
                                                  cases-per-1000-people to display"), 
-                                        min = 0, 
-                                        max = 8, 
-                                        step = 1,
-                                        value = c(0, 4))
-                            
-                          ), #end sidebar panel
-                         
-                          mainPanel(
-                            # output plot
-                            plotOutput("dotplot")
-                          ) #end main panel
-                        ) #end sidebar layout
-               ),#end tabpanel County View
+                                      min = 0, 
+                                      max = 8, 
+                                      step = 1,
+                                      value = c(0, 4))
+                          
+                        ), #end sidebar panel
+                        
+                        mainPanel(
+                          # output plot
+                          plotOutput("dotplot", brush = brushOpts(id = "dot_brush")),
+                          
+                          # output text
+                          verbatimTextOutput("brush_info")
+                        ) #end main panel
+                      ) #end sidebar layout
+             ),#end tabpanel County View
              
              tabPanel("Map View",
                       plotOutput('Covid_Map'),
@@ -187,9 +190,10 @@ server <- function(input, output) {
   selectedData <- reactive({
     df %>%
       filter(Region %in%  input$s_region,
-             peaks == input$s_peak,
+             peaks %in% input$s_peak,
              urban_code  %in% input$s_urban
       )
+  
   })
   
   # dotplot output
@@ -198,13 +202,40 @@ server <- function(input, output) {
                                       color = "Region")) +
       geom_point(alpha = 0.5, size = 2.5) +
       labs(x = if(input$s_factor == "median.income"){"Median Income"} else {"% Deomcrat Votes"},
-           y = "Covid Case per 1000")+
+           y = "Covid Case per 1000",
+           title = paste0("Covid Case per 1000 people vs. ", 
+                          if(input$s_factor == "median.income"){"Median Income"} 
+                          else {"% Deomcrat Votes"}))+
       scale_y_continuous(limits = input$slider) +
+      facet_wrap(~peaks) +
       theme_bw()
   })
   
-  # filter data according to input choices for map
+  # text output by brushing
+  selected_points <- reactiveVal()
   
+  observeEvent(input$dot_brush,{
+    selected_points(brushedPoints(selectedData() %>%
+                                    select(county, Region, peaks, !!input$s_factor, case_per), 
+                                  input$dot_brush))
+  })
+  
+  
+  
+  output$brush_info <- renderPrint({
+    if (!is.null(input$dot_brush)) {
+    print(selected_points() %>%
+            as.data.frame() %>%
+            rename(`cases per 1000 people` = case_per,
+                   region = Region) %>%
+            arrange(desc(!!input$s_factor)), 
+          row.names = FALSE)
+    }
+      else {invisible()}
+
+  })
+  
+  # filter data according to input choices for map
   selectedData_new <- reactive({
     total %>%
       filter(peaks == input$peaks2)
