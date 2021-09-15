@@ -254,7 +254,8 @@ server <- function(input, output) {
     ggplot(environment = .e)+
       geom_sf(selectedData_new(), mapping = aes(fill = !!input$variable_case), color = "grey", lwd = 0.01) +
       theme_bw()+
-      theme(axis.text.x = element_blank(),axis.text.y = element_blank()) 
+      theme(axis.text.x = element_blank(),axis.text.y = element_blank()) +
+      scale_fill_viridis_c(option = "magma",limits = c(0,3))
   })
   
   # map output for income group
