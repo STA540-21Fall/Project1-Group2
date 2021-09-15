@@ -19,6 +19,10 @@ library(tidyverse)
 
 df <- read_csv("data/final.csv")
 
+###codes to download packages
+# install.packages(“devtools”)
+# devtools::install_github(“UrbanInstitute/urbnmapr”)
+
 counties <- get_urbn_map(map = "counties", sf = TRUE)
 total <- merge(counties, df, by.x = "county_fips", by.y = "fips")
 total_rep <- total %>% 

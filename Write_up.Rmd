@@ -1,7 +1,7 @@
 ---
-title: "Project 1 Group 2 Write up"
+title: "Project 1 Group 2 Report"
 author: "Michael Sarkis,Xige Huang,Yanqin Shen,Lingyu Zhou"
-date: "8/31/2021"
+date: "9/14/2021"
 output: pdf_document
 ---
 
