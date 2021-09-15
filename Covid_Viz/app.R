@@ -50,7 +50,7 @@ ui <- fluidPage(
                                  h3("Data Filters"),
                                  h4("Peaks"),p("The Peak filter allows for selecting data corresponding 
                                      to the 7 day average of covid cases on the specified date.3 Peaks in covid cases have been 
-                                     identified using background data. The peaks chosen are July 20th 2020; January 8th 2021 and August 27th 2021.
+                                     identified using background data. The peaks chosen are July 20th 2020, January 8th 2021 and August 27th 2021.
                                         Selecting a date will display case data corresponding to the 7 day average of cases on that date."),
                                  h4("Regions"),p("The regions filter allows for selection of US counties based on 
                                                      census designated region to anlyze trends in different regions of the country.
@@ -115,7 +115,7 @@ ui <- fluidPage(
                                                          4,
                                                          5,
                                                          "6-Rural"=6),
-                                             selected = c(1, 6)),
+                                             selected = c(1,2,3,4,5, 6)),
                           
                           # select factor
                           radioButtons(inputId = "s_factor", 

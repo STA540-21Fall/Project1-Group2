@@ -1,204 +1,50 @@
 ---
-title: "Project1_Group2_writeup"
+title: "Project 1 Group 2 Write up"
 author: "Michael Sarkis,Xige Huang,Yanqin Shen,Lingyu Zhou"
 date: "8/31/2021"
 output: pdf_document
 ---
 
-```{r}
-library(tidyverse)
-library(readxl)
-library(dplyr)
-```
-
-
 # Background, motivation, objective
+
+At the beginning of our project we wanted to see if socio-economic factors had any influence on the impact Covid. Some original ideas for socio-economic data to use included looking at unemployment, education scores, public assistance percentages and median income. We also looked how to quantify the effect of covid, which could be measured through hospitalizations, deaths or cases. We ultimately decided to use median-income alongside case per capita for our socio-economic analysis due to the availability of quality data for all US counties. We also decided to include political voting information as it was decided that a trend between covid cases and political voting was likely.
+
+The overall objective of our project was to use visualizations to look at Covid-19 case data on a county level and see if there was any connection between median income or democrat voting percentage and the Covid cases per 1000 people. 
 
 # Data acquiring and cleaning
 
-We got the county-level Covid-19 cases data from New York Times Github repository. The dataset contains cumulative cases for each county in each day. For the socioeconomic data, we got 2013 rural-urban continuum codes which indicates degree of urbanization, 2019 median household income and 2020 unemployment rate from !!data source !! for each county.  Also, in order to get the latest socioeconomic information in the United States, we obtained 2021 unemployment rate from !!data source !!. In addition to socioeconomic factors, we also got 2020 US election data from !!data source !!. We chose to use the percentage of people who voted for Democrats in each county. For further analysis, we also decided to include the region each county belongs to from !!data source !! and each county's geographical information from Simplemaps.
+  We obtained our data from many different sources. The county-level Covid-19 cases data came from the New York Times. The median income data was obtained from the U.S. bureau of labor statistics.  The urbanization index was gathered from the National Center for Health Statistics and the political voting data was access from Tony McGovern's public github. We chose to use the percentage of people who voted for Democrats in each county to make the data consistent. For further analysis, we also decided to include the region each county belongs based upon their Census region designation.
 
-In order to merge datasets together, all the datasets we have include county FIPS code. Using FIPS code is safer than county and state names because some states have same county names. However, county FIPS codes have different formats in different datasets. Some datasets include both 4-digit and 5-digit FIPS codes and 2021 unemployment data separates state and county FIPS codes into two columns. Finally, we decided to transform all FIPS codes into 5-digit by adding zeros before the codes having 4 digits and combining state and county FIPS into one column for 2021 unemployment data.
+  In order to merge datasets together we used county FIPS code, a 5 digit code used by the federal government to numerically identify counties. Using FIPS code is safer than county and state names because some states have same county names. Unfortunately, county FIPS codes have different formats in different datasets, as there have been multiple editions of the FIPS code system. After standardizing the FIPS code a merge became much easier. However, In the Covid case data, some observations had missing FIPS Codes. Most of these observations have unknown county names and were ultimately ignored. There were also two counties with missing FIPS code: Joplin and Kansas City in Missouri. Since the information of these two counties are also missing in other datasets, we decided to exclude them. 
+  
+  The other issue in the covid case data was that New York City was considered a single county despite consisting of five counties. To fix this decided to combine the information from counties in New York City together in the other datasets. For household median income we just calculated the average.
 
-Also, since we have different unemployment data for 2020 and 2021, we decided to separate 2019 median income and 2020 unemployment data, and add a temporary variable year for each year's unemployment data for future merging steps.
-
-In the case data, we figured out that there are some missing values in FIPS Code. Most of these observations have unknown county names and we ignored these observations. There are also two counties with missing FIPS code: Joplin and Kansas City in Missouri. Since the information of these two counties are also missing in other datasets, we decided to exclude them. The major issue is that in case data, New York City is considered as a whole. However, in other datasets, New York City is separated into five counties. Thus, we decided to combine the information from counties in New York City together in the datasets other than case data. For household median income and geographic data, we calculated the average. Also, we calculated the unemployment rate by $\frac{\sum unemployed}{\sum unemployed + \sum employed}$ and the percentage of people who voted for Democrats by $\frac{\sum voting\ for\ democrats}{\sum total\ votes}$.
-
-In order to get the 7-day average for the three peaks we picked, we first created the variable that indicates which peak each day is in. Then ,we excluded the observations that are not recorded in the peaks. Since we have cumulative cases in the data, we calculated the 7-day average by $\frac{\max cases - \min cases}{7}$. 
-
-Finally, we created a year variable by peak information and merged all the datasets into the final dataset. Here is the information of our final dataset.
-
-\begin{center}
-\begin{tabular}{ |c|c| } 
- \hline
- \multicolumn{2}{|c|}{Final dataset: 9625 observations} \\
-  \hline
- peaks & indicating which peak the observation is in \\ 
- \hline
- fips &  US county FIPS code \\ 
- \hline
- cases & 7-day average cases\\
- \hline
- county & county name\\
- \hline
- state & state name \\
- \hline
- Region & region name: Midwest,Northeast,South,West\\
- \hline
- lat & latitude of county center\\
- \hline
- lng & longitude of county center\\
- \hline
- population & county population size\\
- \hline
- per\_dem & percentage of people voting for Democrats\\
- \hline
- urban\_code & 2013 rural-urban continuum codes\\
- \hline
- median.income & household median income\\
- \hline
- unemployed.rate & unemployment rate\\
- \hline
-\end{tabular}
-\end{center}
-
-```{r read_data, echo = FALSE}
-cases_deaths = read.csv("data/us-counties.csv")[,1:5]
-income_unemp = read_excel("data/Income_Unemployment.xlsx", skip = 4)[,c(1,4,88,89,90,91)]
-unemp2021 = read.table("data/labor_force_latest.txt", 
-                       skip = 6, sep = "|", fill = TRUE,
-                       col.names = c("area code", "FIPS1", "FIPS2", "area title",
-                                     "period", "civilian labor force", "employed",
-                                     "unemployed", "unemployed rate",
-                                     "median.income"))[,c(2,3,5,7,8,9)]
-voting = read.csv("data/voting_data.csv")[,c(2,5,6,9)]
-region = read.table("data/us_regions.txt", sep = ",", header = TRUE)[,c(1,3)]
-geographic = read.csv("data/uscounties.csv")[,c(4,7,8,9)]
-```
-
-```{r fips cleaning, echo = FALSE}
-#get same format and name for FIPS code, date and year
-cases_deaths$fips = formatC(cases_deaths$fips, width = 5, format = "d", flag = "0")
-cases_deaths$date = as.Date(cases_deaths$date)
-names(income_unemp) = c("fips","urban_code","employed","unemployed",
-                        "unemployed.rate","median.income")
-income_unemp$year = rep("2020", nrow(income_unemp))
-income = income_unemp[,c(1,2,6)]
-unemp2020 = income_unemp[,c(1,3:5,7)]
-unemp2021 = unemp2021[unemp2021$period == "   May-21  ",]
-unemp2021$FIPS1 = formatC(unemp2021$FIPS1, width = 2, format = "d", flag = "0")
-unemp2021$FIPS2 = formatC(unemp2021$FIPS2, width = 3, format = "d", flag = "0")
-unemp2021$fips =paste(unemp2021$FIPS1, unemp2021$FIPS2, sep = "")
-unemp2021 = unemp2021[,c(7,4:6)]
-unemp2021$year = rep("2021", nrow(unemp2021))
-voting$county_fips = formatC(voting$county_fips, width = 5, format = "d", flag = "0")
-names(voting)[1] = "fips"
-names(region)[1] = "state"
-geographic$county_fips = formatC(geographic$county_fips, width = 5, format = "d", flag = "0")
-names(geographic)[1] = "fips"
-```
-
-
-```{r combining nyc, echo = FALSE}
-cases_deaths[cases_deaths$county == "New York City",]$fips = "nyc"
-nyc = c("36005","36047","36061","36081","36085")
-geographic_nyc = geographic %>% 
-  filter(fips %in% nyc) %>%  
-  summarize(lat = mean(lat), lng = mean(lng), population = sum(population))
-geographic_nyc$fips = "nyc"
-geographic_nyc = geographic_nyc[,c(4,1:3)]
-geographic = geographic %>% 
-  filter(!fips %in% nyc)
-geographic = rbind(geographic, geographic_nyc)
-income_nyc = income %>% 
-  filter(fips %in% nyc) %>%  
-  summarize(median.income = mean(median.income))
-income_nyc$fips = "nyc"
-income_nyc$urban_code= 1
-income_nyc = income_nyc[,c(2,1,3)]
-income = income %>% 
-  filter(!fips %in% nyc)
-income = rbind(income, income_nyc)
-unemp2020_nyc = unemp2020 %>% 
-  filter(fips %in% nyc) %>%  
-  summarize(unemployed.rate =sum(unemployed) / (sum(unemployed) + sum(employed)))
-unemp2020_nyc$fips = "nyc"
-unemp2020_nyc$year = "2020"
-unemp2020_nyc = unemp2020_nyc [,c(2,1,3)]
-unemp2020 = unemp2020[,c(1,4,5)] %>% 
-  filter(!fips %in% nyc)
-unemp2020 = rbind(unemp2020, unemp2020_nyc)
-unemp2021_nyc = unemp2021 %>% 
-  filter(fips %in% nyc) %>%  
-  mutate(employed = str_replace_all(employed, ",", "")) %>% 
-  mutate(unemployed = str_replace_all(unemployed, ",", "")) %>% 
-  mutate(employed = as.integer(employed), unemployed = as.integer(unemployed)) %>% 
-  summarize(unemployed.rate =sum(unemployed) / (sum(unemployed) + sum(employed)))
-unemp2021_nyc$fips = "nyc"
-unemp2021_nyc$year = "2020"
-unemp2021_nyc = unemp2021_nyc [,c(2,1,3)]
-unemp2021 = unemp2021[,c(1,4,5)] %>% 
-  filter(!fips %in% nyc)
-unemp2021 = rbind(unemp2021, unemp2021_nyc)
-voting_nyc = voting %>% 
-  filter(fips %in% nyc) %>%  
-  summarize(per_dem =sum(votes_dem) / sum(total_votes))
-voting_nyc$fips = "nyc"
-voting_nyc = voting_nyc [,c(2,1)]
-voting= voting[,c(1,4)] %>% 
-  filter(!fips %in% nyc)
-voting = rbind(voting, voting_nyc)
-```
-
-```{r merge data, echo = FALSE}
-employment = rbind(unemp2020, unemp2021)
-info = unique(cases_deaths[,c(2,3,4)])
-final_cases = cases_deaths %>% 
-  mutate(peaks = case_when (date >= "2020-07-20" & date <= "2020-07-26" ~ "peak 1",
-                            date >= "2021-01-08" & date <= "2021-01-14" ~ "peak 2",
-                            date >= "2021-08-23" & date <= "2021-08-29" ~ "peak 3")) %>%
-  filter(!is.na(peaks)) %>% 
-  filter(fips!= "   NA") %>% 
-  group_by(peaks, fips) %>% 
-  summarise(cases = (max(cases) - min(cases))/7)
-
-final = final_cases %>% 
-  mutate(year = case_when(peaks == "peak 1" ~ "2020",
-                          peaks == "peak 2" ~ "2021",
-                          peaks == "peak 3" ~ "2021")) %>% 
-  left_join(info, by = "fips") %>% 
-  left_join(region, by = "state") %>% 
-  left_join(geographic, by = "fips") %>% 
-  left_join(voting, by = "fips") %>% 
-  left_join(income, by = "fips") %>% 
-  left_join(employment, by = c("year", "fips")) %>% 
-  select(-year)
-
-
-# modified and standarized dataframe for plotting
-final <- final %>%
-  mutate(Region = ifelse(is.na(Region), "Caribbean island and unincorporated territory", Region)) %>%
-  mutate(cases = ifelse(is.na(cases), 0, cases)) %>%
-  drop_na(population, median.income, unemployed.rate) %>%
-  mutate(Case.per = cases/population*1000,
-         peaks = str_to_title(peaks)) %>%
-  rename(County = county,
-         State = state,
-         Median.Income = median.income,
-         Unemployed.Rate = unemployed.rate,
-         Urban.Code = urban_code,
-         Per.Vote.Dem = per_dem,
-         Peaks = peaks)
-
-final$Income.Group <- cut(final$Median.Income,
-                       breaks = c(0,40100,120400,Inf), 
-                       labels = c('Low Income','Middle Income','Upper Income'))
-
-
-# write.csv(final, "data/final.csv")
-
-```
+Finally, we took a 7 day average of covid cases at each of the days we chose for our peaks(July 20th 2020, January 8th 2021 and August 27th 2021) and merged all the datasets into the final dataset.
 
 # Visualizations
 
-# Conclusions
+## Scatterplot
+
+The "County View" tab is designed to give customized scatterplots comparing Covid cases to political voting or median income on county level. The visualization allows users to select from 3 time periods, which corresponds to the 3 main peaks in Covid cases in the US that we found through background research. The region and urban index filters also allow the user to customize the visualization to a smaller subset of the data. Furthermore, the user can click and drag on one or multiple points that they are interested in to see more detailed information including county name, state, region, case per 1000 people and the factor they have previously chosen.
+
+
+## Map
+
+The "Map View" tab is designed to give customized map plots on Covid cases, unemployment and median income for each Covid case peak. The median-income and unemployment data are static and do not change between time periods. However, Covid cases do change between time periods and selecting a specific peak displays a map of the 7-day average of Covid cases from the specified date for every county. Blank counties and states in the map are caused by a lack of county or state level data of the variable.
+
+
+
+# Visualizations Insights
+
+Overall, our visualizations demonstrate a clear negative relationship between cases per 1000 people and median income as well as between cases per 1000 people and percentage of population voted for the Democrats in the 2020 election in all of the three peaks. This means that counties with higher income level or proportion of people supporting the Democratic party tend to have less cases during the pandemic. The relationships are more flat in peak 1 and more negative in peak 3.
+
+Among all the regions, we observe some interesting trends for the South region and the Northeast region regarding the trend between cases per 1000 people and the political factor -- percentage of people voted for the Democratic party and that between cases and the socioeconomic factor -- median income.
+
+For the South region, some of the counties from the lower- to mid- income group had significantly more cases than counties in other regions in peak 3.  This was especially unique because for most counties there were fewer cases in peak 3 than there were in peak 2. Meanwhile higher income counties in the South region did have cases in peak 3. This also corresponds to what we can observe from the map view where cases from peak 3 are concentrated in the southwest part of Florida. Consequently, the slope between cases and median income for the South is much steeper in peak 3 than that in peak 2.
+
+As for the Northeast region, we surprisingly observe a positive slope between cases and median income in peak 2, meaning that counties with higher median income were having larger number of average cases; this was not true for all other regions as they were either essentially flat or negatively sloping. Moreover, the slope between cases and percentage voted for the Democrats is also almost completely flat for the Northeast Region in peak 2.
+
+# Conclusion
+
+This visualization can show a wide range of information about county level covid cases. The insights in the previous section are only a few of the many interesting correlations and trends that can be seen from this app.
+
