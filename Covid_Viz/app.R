@@ -22,7 +22,14 @@ df <- read_csv("data/final.csv")
 counties <- get_urbn_map(map = "counties", sf = TRUE)
 total <- merge(counties, df, by.x = "county_fips", by.y = "fips")
 total_rep <- total %>% 
-  select(c("Case.per","Income.Group","Unemployed.Rate"))
+  select(c("Case.per","Income.Group","Unemployed.Rate")) %>% 
+  st_set_geometry(NULL)
+
+total_rep1 <- total_rep %>% 
+  select(c("Case.per"))
+
+total_rep2 <- total_rep %>% 
+  select(c("Income.Group","Unemployed.Rate"))
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -139,14 +146,18 @@ ui <- fluidPage(
              ),#end tabpanel County View
              
              tabPanel("Map View",
-                      plotOutput('Covid_Map'),
-                      plotOutput('COivd_Map2'),
+                      splitLayout(cellWidths = c("50%", "50%"),
+                                  plotOutput('Covid_Map'),
+                                  plotOutput('Covid_Map2')),
                       
                       hr(),
                       
                       fluidRow( 
                         column(6, div(align = "left",h3("Time Period (Covid Cases Only)"),
-                                      
+                                      varSelectInput("variable_case", "Variable:",
+                                                     total_rep1,
+                                                     selectize = FALSE,
+                                                     selected = "Case.per"),
                                       radioButtons(inputId ="peaks2",
                                                    label = "",
                                                    choices = c("Peak 1 (7/20/20)" = "Peak 1",
@@ -161,9 +172,10 @@ ui <- fluidPage(
                         column(6,
                                div(align = "left",h3("Data"),
                                    varSelectInput("variable", "Variable:",
-                                                  total_rep,
-                                                  selected = "Case.per"),
-                                  
+                                                  total_rep2,
+                                                  selectize = FALSE,
+                                                  selected = "Income.Group"),
+
                                )# end div
                         ),#end middle Region
                         
@@ -179,7 +191,6 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
-  
   
   # filter data according to input choices
   selectedData <- reactive({
@@ -237,13 +248,22 @@ server <- function(input, output) {
       filter(Peaks == input$peaks2)
   })
   
-  # map output
+  # map output for cases
+  .e <- environment()
   output$Covid_Map <- renderPlot({
-    ggplot()+
-      geom_sf(selectedData_new(), mapping = aes(fill = !!input$variable), color = "grey", lwd = 0.01) +
+    ggplot(environment = .e)+
+      geom_sf(selectedData_new(), mapping = aes(fill = !!input$variable_case), color = "grey", lwd = 0.01) +
       theme_bw()+
-      theme(axis.text.x = element_blank(),axis.text.y = element_blank()) +
-      if(!!input$variable == "Case.per"){scale_fill_viridis_c(option = "magma",limits = c(0,3))}else{}
+      theme(axis.text.x = element_blank(),axis.text.y = element_blank()) 
+  })
+  
+  # map output for income group
+  output$Covid_Map2 <- renderPlot({
+    ggplot()+
+      geom_sf(data = selectedData_new(), mapping = aes(fill = !!input$variable), 
+              color = "grey", lwd = 0.01) +
+      theme_bw()+
+      theme(axis.text.x = element_blank(),axis.text.y = element_blank()) 
   })
   
 }#End server
